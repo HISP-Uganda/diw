@@ -1,11 +1,11 @@
 import { AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, Box, Button, Checkbox, FormControl, FormLabel, Stack } from '@chakra-ui/react';
 import { useStore } from 'effector-react';
 import { FC } from "react";
-import Select from 'react-select'
+import Select from 'react-select';
+import { addStageAttribute, addStageCheckboxAttribute, addStageDataElement, addStageMapping, updateStageDataElementMappingAttribute } from '../../utils';
+import { OptionsProps, ProgramStageMappingProps } from "../models/interfaces";
+import { $stageMapping, app } from '../models/Store';
 
-import { OptionsProps, ProgramStageMappingProps } from "../../interfaces";
-import { app, excelSheets } from '../../Store';
-import { addStageAttribute, addStageCheckboxAttribute, addStageDataElement, addStageMapping } from '../../utils';
 interface Element {
   d: any,
   stage: string
@@ -13,38 +13,39 @@ interface Element {
 
 const ColumnSelect: FC<OptionsProps> = ({ stage, attribute }) => {
   const store = useStore(app);
+  const stageMapping = useStore($stageMapping)
   return <Select
     placeholder="Select Event Date Column"
-    value={store.mapping.stageMapping[stage]?.[attribute]}
+    value={stageMapping[stage]?.[attribute]}
     onChange={addStageAttribute(stage, attribute)}
     isClearable
-    options={store.columns}
+    options={store.sourceResource}
   />
 }
 
-const DataElementMapping: FC<Element> = ({ d, stage }) => {
+const DataElementMapping: FC<Element> = ({ d: { id, name, compulsory, valueType, optionSetValue, optionSet }, stage }) => {
   const store = useStore(app);
+  const stageMapping = useStore($stageMapping)
   return <Stack direction="row" alignItems="center" spacing="50px">
-    <Box flex={1}>{d.name}</Box>
-    <Box w="100px" textAlign="center"><Checkbox isDisabled isChecked={d.compulsory} /></Box>
+    <Box flex={1}>{name}</Box>
+    <Box w="100px" textAlign="center"><Checkbox isDisabled isChecked={compulsory} /></Box>
     <Box flex={1}>
       <Select
         isClearable
         placeholder="Select column"
-        value={store.mapping.stageMapping[stage]?.mapping[d.id]?.equivalent}
-        onChange={addStageDataElement(stage, d.id)}
-        options={store.columns}
+        value={stageMapping[stage]?.mapping[id]?.equivalent}
+        onChange={addStageDataElement(stage, id, { mandatory: compulsory, optionSetValue, optionSet: optionSet ? optionSet.id : '', manual: false, valueType })}
+        options={store.sourceResource}
       />
     </Box>
-    <Box w="100px" textAlign="center">{d.optionSetValue && <Button>Map Options</Button>}</Box>
-    <Box w="100px" textAlign="center"><Checkbox isChecked={store.mapping.stageMapping[stage]?.mapping[d.id]?.isIdentifier} /></Box>
+    <Box w="100px" textAlign="center">{optionSetValue && <Button>Map Options</Button>}</Box>
+    <Box w="100px" textAlign="center"><Checkbox isChecked={stageMapping[stage]?.mapping[id]?.unique} onChange={updateStageDataElementMappingAttribute(stage, id, 'unique')} /></Box>
   </Stack>
 }
 
 export const ProgramStageMapping: FC<ProgramStageMappingProps> = ({ stage }) => {
   const store = useStore(app);
-  const sheets = useStore(excelSheets)
-
+  const stageMapping = useStore($stageMapping)
   return (
     <AccordionItem>
       {({ isExpanded }) => (
@@ -61,32 +62,32 @@ export const ProgramStageMapping: FC<ProgramStageMappingProps> = ({ stage }) => 
             {isExpanded && <Stack spacing="20px">
               <Stack spacing={10} direction="row">
                 <Checkbox
-                  isChecked={store.mapping.stageMapping[stage.id]?.createEvents}
-                  onChange={addStageMapping(stage.id, !!store.mapping.stageMapping[stage.id]?.updateEvents, 'update')}
+                  isChecked={stageMapping[stage.id]?.createEvents}
+                  onChange={addStageMapping(stage.id, !!stageMapping[stage.id]?.updateEvents, 'update', stage.repeatable)}
                 >
                   Create Events
                 </Checkbox>
                 <Checkbox
-                  isChecked={store.mapping.stageMapping[stage.id]?.updateEvents}
-                  onChange={addStageMapping(stage.id, !!store.mapping.stageMapping[stage.id]?.createEvents, 'create')}
+                  isChecked={stageMapping[stage.id]?.updateEvents}
+                  onChange={addStageMapping(stage.id, !!stageMapping[stage.id]?.createEvents, 'create', stage.repeatable)}
                 >
                   Update Events
                 </Checkbox>
-                {(store.mapping.stageMapping[stage.id]?.createEvents || store.mapping.stageMapping[stage.id]?.updateEvents) && <>
+                {(stageMapping[stage.id]?.createEvents || stageMapping[stage.id]?.updateEvents) && <>
                   <Checkbox
-                    isChecked={store.mapping.stageMapping[stage.id]?.dateIdentifiesEvent}
-                    onChange={addStageCheckboxAttribute(stage.id, 'completeEvents')}
+                    isChecked={stageMapping[stage.id]?.dateIdentifiesEvent}
+                    onChange={addStageCheckboxAttribute(stage.id, 'dateIdentifiesEvent')}
                   >
                     Event Date Uniquely Identifies Event
                   </Checkbox>
                   <Checkbox
-                    isChecked={store.mapping.stageMapping[stage.id]?.completeEvents}
+                    isChecked={stageMapping[stage.id]?.completeEvents}
                     onChange={addStageCheckboxAttribute(stage.id, 'completeEvents')}
                   >
                     Mark Events as Complete
                   </Checkbox>
                   <Checkbox
-                    isChecked={store.mapping.stageMapping[stage.id]?.eventUIDProvided}
+                    isChecked={stageMapping[stage.id]?.eventUIDProvided}
                     onChange={addStageCheckboxAttribute(stage.id, 'eventUIDProvided')}
                   >
                     Event UID Column Provided
@@ -94,27 +95,17 @@ export const ProgramStageMapping: FC<ProgramStageMappingProps> = ({ stage }) => 
                 </>}
               </Stack>
 
-              {(store.mapping.stageMapping[stage.id]?.createEvents || store.mapping.stageMapping[stage.id]?.updateEvents) && <Stack spacing={5} direction="row">
+              {(stageMapping[stage.id]?.createEvents || stageMapping[stage.id]?.updateEvents) && <Stack spacing={5} direction="row">
                 <FormControl id="type" isRequired>
-                  <FormLabel>Select Sheet with Data</FormLabel>
-                  <Select
-                    isClearable
-                    placeholder="Select Sheet with Data"
-                    value={store.mapping.stageMapping[stage.id].sheet}
-                    onChange={addStageAttribute(stage.id, 'sheet')} options={sheets}
-                  />
-                </FormControl>
-                {!!store.mapping.stageMapping[stage.id]?.sheet && <FormControl id="type" isRequired>
                   <FormLabel>Event Date Column</FormLabel>
                   <ColumnSelect stage={stage.id} attribute="eventDateColumn" />
-                </FormControl>}
-
-                {store.mapping.stageMapping[stage.id]?.eventUIDProvided && <FormControl id="type" isRequired>
+                </FormControl>
+                {stageMapping[stage.id]?.eventUIDProvided && <FormControl id="type" isRequired>
                   <FormLabel>Event UID Column</FormLabel>
                   <ColumnSelect stage={stage.id} attribute="eventUIDColumn" />
                 </FormControl>}
 
-                {!!store.mapping.stageMapping[stage.id]?.eventDateColumn && <>
+                {!!stageMapping[stage.id]?.eventDateColumn && <>
                   <FormControl id="type">
                     <FormLabel>Latitude Column</FormLabel>
                     <ColumnSelect stage={stage.id} attribute="latitudeColumn" />
@@ -126,7 +117,7 @@ export const ProgramStageMapping: FC<ProgramStageMappingProps> = ({ stage }) => 
                 </>}
               </Stack>}
 
-              {!!store.mapping.stageMapping[stage.id]?.eventDateColumn && <>
+              {!!stageMapping[stage.id]?.eventDateColumn && <>
                 <Stack direction="row" alignItems="center" spacing="50px" mb="10px">
                   <Box flex={1}>Name</Box>
                   <Box w="100px" textAlign="center">Required</Box>

@@ -1,49 +1,52 @@
 
 import { Checkbox, FormControl, FormLabel, SimpleGrid, Stack, Text } from "@chakra-ui/react";
 import { useStore } from 'effector-react';
-import Select from 'react-select'
-import { app, booleans, excelSheets, registrationColumns } from "../../Store";
-import { onChange2, onCheck } from '../../utils';
-import { AttributeMapping } from "./AttributeMapping";
+import Select from 'react-select';
+import { changeCategoryMapping, onChangeTrackerInfo, onCheckTrackerInfo } from '../../utils';
+import { $categoryMapping, app } from "../models/Store";
+import { AttributeMapping } from './AttributeMapping';
 export const TrackedEntityMapping = () => {
   const store = useStore(app);
-  const registrationColumns$ = useStore(registrationColumns);
-  const sheets = useStore(excelSheets);
-  const bools = useStore(booleans);
+  const categoryMapping = useStore($categoryMapping)
   return (
     <Stack spacing="6">
-      <Text>Attribute Mappings for {store.currentResource.name}</Text>
-      {bools.showSelectSheet && <FormControl isRequired>
-        <FormLabel>Registration</FormLabel>
-        <Select placeholder="Select sheet with registration details" value={store.mapping.registrationSheet} onChange={onChange2("registrationSheet")} options={sheets} />
-      </FormControl>}
-      {(!!store.mapping.registrationSheet || !bools.showSelectSheet) && <>
-        <FormControl>
-          <FormLabel>Enrollment & Registration Options</FormLabel>
-          <Stack spacing={10} direction="row">
-            <Checkbox isChecked={store.mapping.createEntities} onChange={onCheck('createEntities')}>Register New Entities </Checkbox>
-            <Checkbox isChecked={store.mapping.updateEntities} onChange={onCheck('updateEntities')}>Update Registration of Entities</Checkbox>
-            <Checkbox isChecked={store.mapping.createEnrollments} onChange={onCheck('createEnrollments')}>Create New Enrollments</Checkbox>
-            <Checkbox isChecked={store.mapping.incidentDateProvided} onChange={onCheck('incidentDateProvided')}>Incident Date Provided</Checkbox>
-            <Checkbox isChecked={store.mapping.trackedEntityInstanceProvided} onChange={onCheck('trackedEntityInstanceProvided')}>Tracked Entity Instance UID Provided</Checkbox>
-          </Stack>
-        </FormControl>
-        {store.mapping.createEnrollments && <SimpleGrid columns={3} minChildWidth="100px" spacing="6">
-          <FormControl id="sheet" isRequired>
+      <Text>Attribute Mappings</Text>
+      <FormControl>
+        <FormLabel>Enrollment & Registration Options</FormLabel>
+        <Stack spacing={10} direction="row">
+          <Checkbox isChecked={store.mapping.trackerInfo.createEntities} onChange={onCheckTrackerInfo('createEntities')}>Register New Entities </Checkbox>
+          <Checkbox isChecked={store.mapping.trackerInfo.updateEntities} onChange={onCheckTrackerInfo('updateEntities')}>Update Registration of Entities</Checkbox>
+          <Checkbox isChecked={store.mapping.trackerInfo.createEnrollments} onChange={onCheckTrackerInfo('createEnrollments')}>Create New Enrollments</Checkbox>
+          <Checkbox isChecked={store.mapping.trackerInfo.updateEnrollments} onChange={onCheckTrackerInfo('updateEnrollments')}>Update Enrollments</Checkbox>
+          {store.mapping.trackerInfo.createEnrollments && <Checkbox isChecked={store.mapping.trackerInfo.incidentDateProvided} onChange={onCheckTrackerInfo('incidentDateProvided')}>Incident Date Provided</Checkbox>}
+          <Checkbox isChecked={store.mapping.trackerInfo.trackedEntityInstanceProvided} onChange={onCheckTrackerInfo('trackedEntityInstanceProvided')}>Tracked Entity Instance UID Provided</Checkbox>
+        </Stack>
+      </FormControl>
+      {(store.mapping.trackerInfo.createEntities || store.mapping.trackerInfo.updateEntities) && <Stack>
+        <SimpleGrid columns={store.destinationCategories.length} minChildWidth="100px" spacing="6">
+          {store.destinationCategories.map((cate: any) =>
+            <FormControl isRequired key={cate.id}>
+              <FormLabel>{cate.name} Column</FormLabel>
+              <Select placeholder="Select Column" value={categoryMapping[cate.id]} onChange={changeCategoryMapping(cate.id)} options={store.sourceResource} />
+            </FormControl>
+          )}
+        </SimpleGrid>
+        <SimpleGrid columns={3} minChildWidth="100px" spacing="6">
+          {store.mapping.trackerInfo.createEnrollments && <FormControl id="sheet" isRequired>
             <FormLabel>Enrollment Date Column</FormLabel>
-            <Select placeholder="Select Sheet" value={store.mapping.enrollmentDateColumn} onChange={onChange2("enrollmentDateColumn")} options={registrationColumns$} />
-          </FormControl>
-          {store.mapping.incidentDateProvided && <FormControl id="sheet" isRequired>
-            <FormLabel>Incident Date Column</FormLabel>
-            <Select placeholder="Select Sheet" value={store.mapping.incidentDateColumn} onChange={onChange2("incidentDateColumn")} options={registrationColumns$} />
+            <Select placeholder="Select Column" value={store.mapping.trackerInfo.enrollmentDateColumn} onChange={onChangeTrackerInfo("enrollmentDateColumn")} options={store.sourceResource} />
           </FormControl>}
-          {store.mapping.trackedEntityInstanceProvided && <FormControl id="sheet" isRequired>
+          {store.mapping.trackerInfo.incidentDateProvided && store.mapping.trackerInfo.createEnrollments && <FormControl id="sheet" isRequired>
             <FormLabel>Incident Date Column</FormLabel>
-            <Select placeholder="Select Sheet" value={store.mapping.trackedEntityInstanceColumn} onChange={onChange2("trackedEntityInstanceColumn")} options={registrationColumns$} />
+            <Select placeholder="Select Column" value={store.mapping.trackerInfo.incidentDateColumn} onChange={onChangeTrackerInfo("incidentDateColumn")} options={store.sourceResource} />
           </FormControl>}
-        </SimpleGrid>}
-        {(store.mapping.createEntities || store.mapping.updateEntities || store.mapping.createEnrollments) && <AttributeMapping />}
-      </>}
+          {store.mapping.trackerInfo.trackedEntityInstanceProvided && <FormControl id="sheet" isRequired>
+            <FormLabel>Entity Instance UID Column</FormLabel>
+            <Select placeholder="Select Column" value={store.mapping.trackerInfo.trackedEntityInstanceColumn} onChange={onChangeTrackerInfo("trackedEntityInstanceColumn")} options={store.sourceResource} />
+          </FormControl>}
+        </SimpleGrid>
+      </Stack>}
+      {(store.mapping.trackerInfo.createEntities || store.mapping.trackerInfo.updateEntities || store.mapping.trackerInfo.createEnrollments) && <AttributeMapping />}
     </Stack>
   )
 }

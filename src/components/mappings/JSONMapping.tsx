@@ -1,13 +1,12 @@
 import {
-  Box, FormControl,
-  FormLabel, Stack, Text, VStack
+  Box, Stack, VStack, SimpleGrid
 } from '@chakra-ui/react';
 import { useStore } from 'effector-react';
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import Select from 'react-select';
-import { addSheet, changeSheetAttribute, setData, setSheetNames } from '../../Events';
-import { app } from '../../Store';
+import { setSourceResource, setData } from '../models/Events';
+import { app } from '../models/Store';
+import { OuColumnMapping } from './OuColumnMapping';
 
 export const JSONMapping = () => {
   const store = useStore(app);
@@ -21,12 +20,15 @@ export const JSONMapping = () => {
       reader.onabort = () => console.log('file reading was aborted')
       reader.onerror = () => console.log('file reading has failed')
       reader.onload = () => {
-        setSheetNames([])
         const data = JSON.parse(String(reader.result));
-        setSheetNames(['JSON']);
+        const processed = Object.keys(data[0]).map((value: string) => {
+          return {
+            label: value,
+            value
+          }
+        });
+        setSourceResource(processed);
         setData(data);
-        addSheet('JSON');
-        console.log('Wired')
       }
       reader.readAsBinaryString(file)
     }
@@ -44,14 +46,9 @@ export const JSONMapping = () => {
           }
         </Box>
       </VStack>
-      {Object.entries(store.mapping.sheets).map(([sheetName, sheet]) => <Stack key={sheetName} spacing="6" direction="row" w="100%" alignItems="center">
-        <Text w="15%">{sheetName}</Text>
-        <FormControl isRequired>
-          <FormLabel>Organisation Column</FormLabel>
-          <Select placeholder="Organisation Unit Column" options={sheet.columns} value={sheet.orgUnitColumn} onChange={(e: any) => changeSheetAttribute({ sheet: sheetName, attribute: 'orgUnitColumn', value: e })} />
-        </FormControl>
-      </Stack>)}
-
+      <SimpleGrid minChildWidth="100px" spacing={5} flex={1}>
+        <OuColumnMapping />
+      </SimpleGrid>
     </Stack>
   )
 }

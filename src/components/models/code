@@ -1,0 +1,257 @@
+.on(removeSheet, (state, sheet) => {
+  // const { [sheet]: removed, ...others } = state.mapping.sheets
+  // return { ...state, mapping: { ...state.mapping, sheets: others } }
+  return { ...state, mapping: { ...state.mapping } }
+}) 
+.on(setCurrentRemoteResource, (state, currentRemoteResource) => {
+  if (state.mapping.type.value === 'P3') {
+    // const stageElements = currentRemoteResource.programStages.map(({ id, programStageDataElements }: any) => {
+    //   return [id, {
+    //     headerRow: 1,
+    //     dataStartRow: 2,
+    //     orgUnitColumns: [],
+    //     columns: [{ label: 'eventDate', value: 'eventDate' }, ...programStageDataElements.map(({ dataElement: { id, name } }: any) => {
+    //       return { label: name, value: id }
+    //     })]
+    //   }]
+    // });
+    // return {
+    //   ...state, currentRemoteResource, mapping: {
+    //     ...state.mapping,
+    //     sheets: {
+    //       ...state.mapping.sheets,
+    //       ...fromPairs(stageElements)
+    //     }
+    //   }
+    // }
+  }
+
+  return {
+    ...state, currentRemoteResource
+  }
+})
+
+export const processTabular = app.map((state) => {
+  if (state.mapping.type.value === 'C3' && state.sheetNames.length > 0 && !!state.data?.Sheets) {
+    // const sheetData = state.data.Sheets[state.sheetNames[0]];
+    // const range = utils.decode_range(sheetData['!ref']);
+  }
+})
+
+export const nextIsDisabled = app.map((state) => {
+  // const next = state.step
+  // const mapping = state.mapping
+  // if (next === 1 && !mapping.name) {
+  //   return true
+  // }
+  return false
+});
+
+.on(addSheet, (state, sheet) => {
+  if (['P1', 'C1', 'C2', 'C3'].indexOf(state.mapping.type.value) !== -1) {
+    const sheetData = state.data.Sheets[sheet]
+    const range = utils.decode_range(sheetData['!ref']);
+    let columns = [];
+    if (['P1', 'C1'].indexOf(state.mapping.type.value) !== -1) {
+      const cols = []
+      for (let column = range.s.c; column <= range.e.c; column++) {
+        const secondCell = sheetData[utils.encode_cell({ r: 0, c: column })];
+        cols.push({ label: !!secondCell ? secondCell.v : `blank${column}`, value: !!secondCell ? secondCell.v : `blank${column}` });
+      }
+      columns = cols;
+
+      // return {
+      //   ...state,
+      //   mapping: {
+      //     ...state.mapping,
+      //     sheets: {
+      //       ...state.mapping.sheets,
+      //       [sheet]: {
+      //         headerRow: 1,
+      //         dataStartRow: 2,
+      //         orgUnitColumn: undefined,
+      //         otherOrgUnitColumns: [],
+      //         columns
+      //       }
+      //     }
+      //   }
+      // }
+    }
+
+    if (state.mapping.type.value === 'C2') {
+      columns = Object.keys(sheetData).map((co: string) => {
+        return { label: co, value: co }
+      })
+    }
+
+    if (state.mapping.type.value === 'C3') {
+      columns = Object.keys(sheetData).map((co: string) => {
+        return { label: co.replace(/[0-9]/g, ''), value: co.replace(/[0-9]/g, '') }
+      })
+    }
+    // return {
+    //   ...state,
+    //   mapping: {
+    //     ...state.mapping,
+    //     sheets: {
+    //       ...state.mapping.sheets,
+    //       [sheet]: {
+    //         orgUnitColumns: [],
+    //         columns
+    //       }
+    //     }
+    //   }
+    // }
+  }
+
+  // if (['P2', 'C4'].indexOf(state.mapping.type.value) !== -1) {
+  //   const [record] = state.data;
+  //   return {
+  //     ...state,
+  //     mapping: {
+  //       ...state.mapping,
+  //       sheets: {
+  //         ...state.mapping.sheets,
+  //         [sheet]: {
+  //           orgUnitColumns: [],
+  //           columns: Object.keys(record).map((co: string) => {
+  //             return { label: co, value: co }
+  //           })
+  //         }
+  //       }
+  //     }
+  //   }
+
+  // }
+})
+
+.on(changeSheetAttribute, (state, attribute) => {
+  // let { [sheet.sheet]: currentSheet } = state.mapping.sheets;
+  // const sheet = state.sheet.selectedSheet?.value
+
+  // currentSheet = { ...currentSheet, [sheet.attribute]: sheet.value }
+  // if (sheet.attribute === 'headerRow') {
+  //   const sheetData = state.data.Sheets[sheet.sheet]
+  //   const range = utils.decode_range(sheetData['!ref']);
+  //   let columns = []
+
+  //   if (['P1', 'C1'].indexOf(state.mapping.type.value) !== -1) {
+  //   }
+
+  //   if (state.mapping.type.value === 'C2') {
+  //     columns = Object.keys(sheetData).map((co: string) => {
+  //       return { label: co, value: co }
+  //     })
+  //   }
+
+  //   if (state.mapping.type.value === 'C3') {
+  //     columns = Object.keys(sheetData).map((co: string) => {
+  //       return { label: co.replace(/[0-9]/g, ''), value: co.replace(/[0-9]/g, '') }
+  //     })
+  //   }
+
+  //   currentSheet = { ...currentSheet, dataStartRow: sheet.value + 1, columns }
+  // }
+  // return { ...state, mapping: { ...state.mapping, sheets: { ...state.mapping.sheets, [sheet.sheet]: currentSheet } } }
+  // return { ...state, mapping: { ...state.mapping } }
+  return { ...state, sheet: { ...state.sheet, [attribute.key]: attribute.value } }
+})
+
+// export const coc = app.map((state) => {
+//   if (state.currentResource && state.mapping && state.mapping.type && state.mapping.type.value.startsWith('C')) {
+//     const { dataSetElements } = state.currentResource;
+//     const allOptions = dataSetElements.map((element: any) => {
+//       return flatten(element.dataElement.categoryCombo.categoryOptionCombos.map((coc: any) => {
+//         const id = `${element.dataElement.id},${coc.id}`
+//         let name = `${element.dataElement.name} ${coc.name}`;
+//         if (coc.name === 'default') {
+//           name = element.dataElement.name
+//         }
+//         return { ...coc, id, name }
+//       }))
+//     });
+//     return flatten(allOptions);
+//   }
+//   return []
+// });
+
+// export const $destinationAttributes = app.map((state) => {
+//   if (state.currentResource && state.mapping && state.mapping.type && state.mapping.type.value.startsWith('P')) {
+//     const { programTrackedEntityAttributes } = state.currentResource;
+//     return programTrackedEntityAttributes.map(({ trackedEntityAttribute, ...other }: any) => {
+//       return { ...other, ...trackedEntityAttribute }
+//     })
+//   }
+//   return []
+// });
+
+// export const $destinationStages = app.map((state) => {
+//   if (state.currentResource && state.mapping && state.mapping.type && state.mapping.type.value.startsWith('P')) {
+//     const { programStages } = state.currentResource;
+//     return programStages.map(({ programStageDataElements, ...others }: any) => {
+//       const elements = programStageDataElements.map(({ dataElement, ...rest }: any) => {
+//         return { ...rest, ...dataElement };
+//       })
+//       return { ...others, elements }
+//     });
+//   }
+//   return []
+// });
+
+// export const $destinationCategories = app.map((state) => {
+//   if (state.currentResource) {
+//     return state.currentResource.categoryCombo.categories.filter((category: any) => {
+//       return category.name !== 'default'
+//     });
+//   }
+//   return []
+// });
+
+// export const $destinationAttributions = app.map((state) => {
+//   if (state.currentResource) {
+//     return state.currentResource.categoryCombo.categoryOptionCombos.map(({ id, name }: any) => {
+//       return {
+//         label: name,
+//         value: id
+//       }
+//     });
+//   }
+//   return []
+// });
+
+
+
+// const locMap = {
+    //   P1: Object.keys(state.mapping.sheets).length ? Object.keys(state.mapping.sheets).map((sheet: string) => {
+    //     return {
+    //       label: sheet,
+    //       value: sheet
+    //     }
+    //   }) : [],
+    //   P2: Object.keys(state.mapping.sheets).length ? Object.keys(state.mapping.sheets).map((sheet: string) => {
+    //     return {
+    //       label: sheet,
+    //       value: sheet
+    //     }
+    //   }) : [],
+    //   P3: Boolean(state.currentRemoteResource) ? state.currentRemoteResource.programStages.map(({ id, name }: any) => {
+    //     return { label: name, value: id }
+    //   }) : [],
+    //   P4: [],
+    // }
+    // if (state.mapping.type && state.mapping.type.value.startsWith('P')) {
+    //   return locMap[state.mapping.type.value] || [];
+    // }
+
+
+    // guard({
+//   filter: (attribute: any) => attribute.key === 'sourceParents' && attribute.value,
+//   source: changeStoreAttribute,
+//   target: updateSourceUnits,
+// });
+
+// guard({
+//   filter: (attribute: any) => attribute.key === 'destParents' && attribute.value,
+//   source: changeStoreAttribute,
+//   target: updateDestUnits,
+// });

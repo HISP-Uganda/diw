@@ -13,10 +13,9 @@ const onProxyRes = (proxyRes) => {
     sessionCookie = proxyCookie;
   }
 };
-
 // proxy middleware options
 const options = {
-  target: "https://icyd.dev.hispuganda.org/dev", // target host
+  target: "https://play.dhis2.org/2.36.3", // target host
   onProxyReq,
   onProxyRes,
   changeOrigin: true, // needed for virtual hosted sites

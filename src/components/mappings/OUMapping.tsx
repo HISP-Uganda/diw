@@ -1,35 +1,34 @@
 import { Box, Stack, Text } from "@chakra-ui/react";
-import { useEffect } from 'react'
 import { useStore } from 'effector-react';
-import { FC } from "react";
+import { FC, useEffect } from 'react';
 import Select from 'react-select';
-import { changeStoreAttribute } from "../../Events";
-import { $localUnits, $remoteUnits, app } from "../../Store";
-import { OUSelect } from './MappingUtils';
 import { autoMapOrganisations } from "../../utils";
+import { changeMappingAttribute } from "../models/Events";
+import { $destinationOrganisationUnits, $sourceOrganisationUnits, app } from "../models/Store";
+import { OUSelect } from './MappingUtils';
 
 interface OUMappingProps {
 }
 
 export const OUMapping: FC<OUMappingProps> = () => {
   const store = useStore(app)
-  const remoteUnits = useStore($remoteUnits)
-  const localUnits = useStore($localUnits)
+  const sourceOrganisationUnits = useStore($sourceOrganisationUnits)
+  const destinationOrganisationUnits = useStore($destinationOrganisationUnits)
 
   useEffect(() => {
-    autoMapOrganisations(remoteUnits, localUnits)
-  }, [store.destParents, store.sourceParents]);
+    autoMapOrganisations(sourceOrganisationUnits, destinationOrganisationUnits)
+  }, [store.mapping.destParents, store.mapping.sourceParents]);
 
   return <Stack spacing="20px">
-    <Text>{remoteUnits.length}</Text>
+    {/* <Text>{sourceOrganisationUnits.length}</Text> */}
     <Stack direction="row" alignItems="center" spacing="50px" mb="10px">
       <Stack flex={1}>
         <Text>Source Organisation</Text>
         <Select
-          value={store.sourceParents}
+          value={store.mapping.sourceParents}
           isMulti
-          onChange={(val: any) => changeStoreAttribute({ key: 'sourceParents', value: val })}
-          options={Object.keys(remoteUnits[0].parent).map((c: any) => {
+          onChange={(val: any) => changeMappingAttribute({ key: 'sourceParents', value: val })}
+          options={Object.keys(sourceOrganisationUnits?.[0].parent).map((c: any) => {
             return {
               label: c,
               value: c
@@ -41,9 +40,9 @@ export const OUMapping: FC<OUMappingProps> = () => {
       <Stack flex={1}>
         <Text>Destination Mapping</Text>
         <Select
-          value={store.destParents}
+          value={store.mapping.destParents}
           isMulti
-          onChange={(val: any) => changeStoreAttribute({ key: 'destParents', value: val })}
+          onChange={(val: any) => changeMappingAttribute({ key: 'destParents', value: val })}
           options={Object.keys(store.destinationOrganisationUnits[0].parent).map((c: any) => {
             return {
               label: c,
@@ -54,8 +53,8 @@ export const OUMapping: FC<OUMappingProps> = () => {
         />
       </Stack>
     </Stack>
-    <Stack direction="column" overflow="auto" h="calc(100vh - 205px)">
-      {remoteUnits.map(({ id, name }: any, i: number) => <Stack key={id} direction="row" alignItems="center" spacing="50px">
+    <Stack direction="column" overflow="auto" h="calc(100vh - 235px)">
+      {sourceOrganisationUnits.map(({ id, name }: any, i: number) => <Stack key={id} direction="row" alignItems="center" spacing="50px">
         <Box flex={1}>{name}</Box>
         <Box flex={1}>
           <OUSelect unit={id} />

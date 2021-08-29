@@ -1,7 +1,7 @@
 import { FormControl, FormLabel, Input, Stack, Textarea } from "@chakra-ui/react";
 import { useStore } from 'effector-react';
 import Select from 'react-select';
-import { app } from "../../Store";
+import { app } from "../models/Store";
 import { onChange, onChange2 } from "../../utils";
 import { AggregateFormMapping } from "./AggregateFormMapping";
 import { FileMapping } from './FileMapping';

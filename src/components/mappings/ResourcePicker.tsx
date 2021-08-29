@@ -1,16 +1,23 @@
 import {
-  Flex, Table, Tbody, Td, Th, Thead, Tr
+  Flex,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr
 } from "@chakra-ui/react";
 import { useStore } from 'effector-react';
 import { useD2 } from "../../Context";
-import { changeMappingAttribute, next } from "../../Events";
-import { useResources } from "../../Queries";
-import { app } from "../../Store";
 import { Loading } from "../Loading";
+import { changeMappingAttribute, next } from "../models/Events";
+import { app } from "../models/Store";
+import { useResources } from "../Queries";
 
 export const ResourcePicker = () => {
   const d2 = useD2()
   const store = useStore(app);
+
   const { isLoading, isError, isSuccess, error, data } = useResources(d2, store.mapping.type);
   const updateMapping = (id: string, name: string) => {
     changeMappingAttribute({ key: 'resource', value: id });

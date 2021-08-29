@@ -1,7 +1,7 @@
 import { Flex } from '@chakra-ui/react';
 import { HashRouter as Router, Route, Switch } from 'react-router-dom';
 import { useD2 } from '../Context';
-import { useLoader } from '../Queries';
+import { useLoader } from './Queries';
 import Home from './Home';
 import { Loading } from './Loading';
 

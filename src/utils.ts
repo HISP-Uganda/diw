@@ -1,20 +1,84 @@
 import { ChangeEvent } from "react";
-import { addAttributeMapping, addSheet, addStage, changeMappingAttribute, markAsIdentifier, removeSheet, changeStageMappingAttribute, changeStageDataElementMapping, addOrgUnitMapping } from "./Events";
-import { mappingAttributes } from "./interfaces";
+import namor from 'namor'
+import {
+  addAttributeMapping,
+  addSheet,
+  addStage,
+  changeMappingAttribute,
+  markAsIdentifier,
+  removeSheet,
+  removeAttributeMapping,
+  changeStageMappingAttribute,
+  addDataElementMapping,
+  addOrgUnitMapping,
+  addCategoryMapping,
+  removeCategoryMapping,
+  removeOrgUnitMapping,
+  removeAttributionMapping,
+  addAttributionMapping,
+  removeDataElementMapping,
+  updateDataElementMapping,
+  changeMappingTrackerInfo,
+  changeRemoteLogin
+} from "./components/models/Events";
+import { mappingAttributes } from "./components/models/interfaces";
 
 export const onChange = (key: mappingAttributes) => (e: ChangeEvent<HTMLSelectElement | HTMLTextAreaElement | HTMLInputElement>) => {
-  changeMappingAttribute({ key, value: e.target.value });
+  changeMappingAttribute({
+    key,
+    value: e.target.value
+  });
+}
+
+export const onRemoteLoginChange = (attribute: 'url' | 'username' | 'password' | 'aggregationLevel') => (e: ChangeEvent<HTMLInputElement>) => {
+  changeRemoteLogin({
+    attribute,
+    value: e.target.value
+  })
 }
 
 export const onChange2 = (key: mappingAttributes) => (value: any) => {
-  changeMappingAttribute({ key, value });
+  changeMappingAttribute({
+    key,
+    value
+  });
 }
+
+
+
+export const changeCategoryMapping = (key: string) => (value: any) => {
+  if (value) {
+    addCategoryMapping({ [key]: value })
+  } else {
+    removeCategoryMapping(key)
+  }
+}
+
 export const onCheck = (key: mappingAttributes) => (e: ChangeEvent<HTMLInputElement>) => {
-  changeMappingAttribute({ key, value: e.target.checked });
+  changeMappingAttribute({
+    key,
+    value: e.target.checked
+  });
+}
+
+export const onChangeTrackerInfo = (key: mappingAttributes) => (value: any) => {
+  changeMappingTrackerInfo({
+    key,
+    value
+  });
+}
+export const onCheckTrackerInfo = (key: mappingAttributes) => (e: ChangeEvent<HTMLInputElement>) => {
+  changeMappingTrackerInfo({
+    key,
+    value: e.target.checked
+  });
 }
 
 export const onMultipleCheck = (key: mappingAttributes) => (value: any[]) => {
-  changeMappingAttribute({ key, value });
+  changeMappingAttribute({
+    key,
+    value
+  });
 }
 
 export const onSelectSheet = (sheet: string) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -25,19 +89,24 @@ export const onSelectSheet = (sheet: string) => (e: ChangeEvent<HTMLInputElement
   }
 }
 
-export const addAttribute = (key: string, isIdentifier: boolean) => (equivalent: any) => {
-  addAttributeMapping({ [key]: { equivalent, isIdentifier } });
+export const addAttribute = (attribute: string, others: any) => (equivalent: any) => {
+  console.log(equivalent);
+  if (equivalent) {
+    addAttributeMapping({ [attribute]: { equivalent, ...others } });
+  } else {
+    removeAttributeMapping(attribute)
+  }
 }
 
 export const mark = (key: string) => (e: ChangeEvent<HTMLInputElement>) => {
   markAsIdentifier([key, e.target.checked]);
 }
 
-export const addStageMapping = (key: string, what: boolean, other: 'create' | 'update') => (e: ChangeEvent<HTMLInputElement>) => {
+export const addStageMapping = (stage: string, what: boolean, other: 'create' | 'update', isRepeatable: boolean) => (e: ChangeEvent<HTMLInputElement>) => {
   if (other === 'create') {
-    addStage([key, what, e.target.checked]);
+    addStage({ stage, createEvents: what, updateEvents: e.target.checked, isRepeatable });
   } else {
-    addStage([key, e.target.checked, what]);
+    addStage({ stage, createEvents: e.target.checked, updateEvents: what, isRepeatable });
   }
 }
 
@@ -49,12 +118,32 @@ export const addStageCheckboxAttribute = (key: string, attribute: string) => (e:
   changeStageMappingAttribute([key, attribute, e.target.checked])
 }
 
-export const addStageDataElement = (key: string, attribute: string) => (e: any) => {
-  changeStageDataElementMapping([key, attribute, e])
+export const addStageDataElement = (stage: string, dataElement: string, others: any) => (equivalent: any) => {
+  if (equivalent) {
+    addDataElementMapping({ stage, dataElement, equivalent, others })
+  } else {
+    removeDataElementMapping({ stage, dataElement })
+  }
+}
+
+export const updateStageDataElementMappingAttribute = (stage: string, dataElement: string, attribute: string) => (e: ChangeEvent<HTMLInputElement>) => {
+  updateDataElementMapping({ stage, dataElement, attribute, value: e.target.checked })
 }
 
 export const addOuMapping = (key: string) => (equivalent: any) => {
-  addOrgUnitMapping({ [key]: { equivalent } });
+  if (equivalent) {
+    addOrgUnitMapping({ [key]: { equivalent } });
+  } else {
+    removeOrgUnitMapping(key);
+  }
+}
+
+export const addAttribution = (key: string) => (equivalent: any) => {
+  if (equivalent) {
+    addAttributionMapping({ [key]: { equivalent } });
+  } else {
+    removeAttributionMapping(key);
+  }
 }
 
 export const orgUnitsPayload = {
@@ -89,9 +178,50 @@ export const findName = (parents: any[], v: any, last: string) => {
 }
 
 export const autoMapOrganisations = (sourceOrganisationUnits: any[], destinationOrganisationUnits: any[]) => {
-
   for (const unit of sourceOrganisationUnits) {
 
   }
 
+}
+
+// function updateStageDataElement(stage: string, dataElement: string, attribute: string, checked: boolean) {
+//   throw new Error('Function not implemented.');
+// }
+
+const range = (len: number) => {
+  const arr = []
+  for (let i = 0; i < len; i++) {
+    arr.push(i)
+  }
+  return arr
+}
+
+const newPerson = () => {
+  const statusChance = Math.random()
+  return {
+    firstName: namor.generate({ words: 1, numbers: 0 }),
+    lastName: namor.generate({ words: 1, numbers: 0 }),
+    age: Math.floor(Math.random() * 30),
+    visits: Math.floor(Math.random() * 100),
+    progress: Math.floor(Math.random() * 100),
+    status:
+      statusChance > 0.66
+        ? 'relationship'
+        : statusChance > 0.33
+          ? 'complicated'
+          : 'single',
+  }
+}
+
+export default function makeData(...lens) {
+  const makeDataLevel = (depth = 0) => {
+    const len = lens[depth]
+    return range(len).map(d => {
+      return {
+        ...newPerson(),
+        subRows: lens[depth + 1] ? makeDataLevel(depth + 1) : undefined,
+      }
+    })
+  }
+  return makeDataLevel()
 }

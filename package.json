@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@dhis2/cli-app-scripts": "^7.0.0",
+    "@types/deep-diff": "^1.0.1",
     "@types/node": "^15.12.4",
     "@types/react": "^17.0.11",
     "@types/react-dom": "^17.0.8",
@@ -31,10 +32,15 @@
     "@emotion/react": "^11.4.0",
     "@emotion/styled": "^11.3.0",
     "@koale/useworker": "^4.0.2",
+    "@types/react-table": "^7.7.2",
+    "@types/styled-components": "^5.1.12",
     "d2": "^31.10.0",
+    "date-fns": "^2.23.0",
+    "deep-diff": "^1.0.2",
     "express": "^4.17.1",
     "framer-motion": "^4.1.17",
     "lodash": "^4.17.21",
+    "namor": "^2.0.3",
     "rc-select": "^13.0.0-alpha.0",
     "react-dropzone": "^11.3.4",
     "react-query": "^3.17.2",
@@ -42,6 +48,8 @@
     "react-router-dom": "^5.2.0",
     "react-select": "^4.3.1",
     "react-select-async-paginate": "^0.5.3",
+    "react-table": "^7.7.0",
+    "react-window": "^1.8.6",
     "xlsx": "^0.17.0"
   }
 }

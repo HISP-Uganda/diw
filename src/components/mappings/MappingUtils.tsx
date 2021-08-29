@@ -1,20 +1,24 @@
+import { Box } from '@chakra-ui/react';
 import { useStore } from 'effector-react';
+import { FC, useCallback, useMemo } from 'react';
 import { AsyncPaginate } from 'react-select-async-paginate';
-import { FC } from 'react'
-import { $localUnits, app, organisationUnits } from "../../Store";
+import { useBlockLayout, useTable } from 'react-table';
+import { FixedSizeList } from 'react-window';
+import { addOuMapping } from '../../utils';
+import { $destinationOrganisationUnits, $organisationUnitMapping } from "../models/Store";
+import scrollbarWidth from '../scrollbarWidth';
 import { OUMapping } from './OUMapping';
-import { findName, addOuMapping } from '../../utils';
 
 interface OUProps {
   unit: string;
 }
 
 export const OUSelect: FC<OUProps> = ({ unit }) => {
-  const store = useStore(app);
-  const units = useStore($localUnits)
+  const organisationUnitMapping = useStore($organisationUnitMapping)
+  const destinationOrganisationUnits = useStore($destinationOrganisationUnits)
 
   async function loadOptions(search: string, loadOptions: any, { page }: any) {
-    const options = units.filter((i: any) =>
+    const options = destinationOrganisationUnits.filter((i: any) =>
       i.name.toLowerCase().includes(search.toLowerCase()) || Object.values(i.parent).join('').includes(search.toLowerCase())
     );
 
@@ -32,9 +36,10 @@ export const OUSelect: FC<OUProps> = ({ unit }) => {
   }
 
   return <AsyncPaginate
-    value={store.mapping.organisationUnitMapping[unit]?.equivalent}
+    value={organisationUnitMapping[unit]?.equivalent}
     onChange={addOuMapping(unit)}
     loadOptions={loadOptions}
+    isClearable
     additional={{
       page: 1,
     }}
@@ -42,6 +47,86 @@ export const OUSelect: FC<OUProps> = ({ unit }) => {
 }
 
 export const DefaultOrganisationUnits = () => {
-  const units = useStore(organisationUnits);
   return <OUMapping />
+}
+
+
+export function Table({ columns, data }) {
+
+  const defaultColumn = useMemo(
+    () => ({
+      width: 300,
+    }),
+    []
+  )
+
+  const scrollBarSize = useMemo(() => scrollbarWidth(), [])
+
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    rows,
+    totalColumnsWidth,
+    prepareRow,
+  } = useTable(
+    {
+      columns,
+      data,
+      defaultColumn,
+    },
+    useBlockLayout
+  )
+
+  const RenderRow = useCallback(
+    ({ index, style }) => {
+      const row = rows[index]
+      prepareRow(row)
+      return (
+        <Box
+          {...row.getRowProps({
+            style,
+          })}
+          bg="yellow.200"
+          className="tr"
+        >
+          {row.cells.map(cell => {
+            return (
+              <Box {...cell.getCellProps()} className="td">
+                {cell.render('Cell')}
+              </Box>
+            )
+          })}
+        </Box>
+      )
+    },
+    [prepareRow, rows]
+  )
+
+  return (
+    <Box {...getTableProps()} className="table">
+      <Box>
+        {headerGroups.map(headerGroup => (
+          <Box {...headerGroup.getHeaderGroupProps()} className="tr">
+            {headerGroup.headers.map(column => (
+              <Box {...column.getHeaderProps()} className="th">
+                {column.render('Header')}
+              </Box>
+            ))}
+          </Box>
+        ))}
+      </Box>
+
+      <Box {...getTableBodyProps()}>
+        <FixedSizeList
+          height={750}
+          itemCount={rows.length}
+          itemSize={35}
+          width={window.innerWidth - 70}
+        >
+          {RenderRow}
+        </FixedSizeList>
+      </Box>
+    </Box>
+  )
 }
